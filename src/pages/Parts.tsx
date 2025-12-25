@@ -10,6 +10,10 @@ import {
   ArrowRight,
   Upload,
   CheckCircle,
+  Wrench,
+  Link2,
+  CircleDot,
+  Car,
 } from "lucide-react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
@@ -27,7 +31,16 @@ import {
 import { toast } from "sonner";
 import truckPartsImage from "@/assets/truck-parts.jpg";
 
-const featuredParts = [
+const inStockEssentials = [
+  { icon: Wind, name: "Airlines & Fittings" },
+  { icon: Link2, name: "Glad Hands & Seals" },
+  { icon: Lightbulb, name: "Lights (marker, trailer, headlights)" },
+  { icon: CircleDot, name: "Brake Chambers / Slack Adjusters (common)" },
+  { icon: Car, name: "Mudflaps & Hardware" },
+  { icon: Droplets, name: "Wipers / Fluids / Basics" },
+];
+
+const partsWeSupply = [
   { icon: Filter, name: "Filters", description: "Oil, air, fuel, DEF filters" },
   {
     icon: Lightbulb,
@@ -82,10 +95,10 @@ const Parts = () => {
   return (
     <>
       <Helmet>
-        <title>Truck Parts & Sourcing | FleetForge Truck Solutions</title>
+        <title>Truck Parts & Supplies | FleetForge Truck Solutions</title>
         <meta
           name="description"
-          content="Quality truck parts sourcing for fleets and owner-operators. Filters, lights, brake components, and more. Quote-based ordering in Northern Virginia."
+          content="In-stock truck parts and supplies for fleets and owner-operators in Northern Virginia. Filters, lights, brake components, and more. Fast supply with VIN-based matching."
         />
       </Helmet>
       <Layout>
@@ -94,36 +107,64 @@ const Parts = () => {
           <div className="container-custom">
             <div className="max-w-3xl">
               <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-6">
-                Parts & Sourcing
+                Parts & Supplies
               </h1>
               <p className="text-xl text-primary-foreground/80">
-                We source quality truck parts for fleets and owner-operators—no
-                need to hunt down what you need. Submit a request and we'll get
-                you a quote.
+                In-Stock Essentials + Fast Supply (VIN-based matching).
               </p>
             </div>
           </div>
         </section>
 
-        {/* Featured Parts */}
+        {/* In-Stock Essentials */}
         <section className="section-padding bg-card">
+          <div className="container-custom">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold text-foreground mb-4">
+                In-Stock Essentials (Common Items)
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                We keep common maintenance items on hand and can supply most parts quickly. If you don't see it listed, request it and we'll quote fast.
+              </p>
+            </div>
+
+            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
+              {inStockEssentials.map((item) => (
+                <div
+                  key={item.name}
+                  className="flex items-center gap-3 p-4 bg-muted rounded-lg"
+                >
+                  <div className="bg-accent/10 p-2 rounded-lg">
+                    <item.icon className="h-5 w-5 text-accent" />
+                  </div>
+                  <span className="font-medium text-foreground">{item.name}</span>
+                </div>
+              ))}
+            </div>
+
+            <p className="text-center text-muted-foreground mt-6 text-sm">
+              In-stock items vary — call/text to confirm availability.
+            </p>
+          </div>
+        </section>
+
+        {/* Parts We Supply */}
+        <section className="section-padding bg-muted">
           <div className="container-custom">
             <div className="grid lg:grid-cols-2 gap-12 items-center">
               <div>
                 <h2 className="text-3xl font-bold text-foreground mb-6">
-                  Parts We Source
+                  Parts We Supply
                 </h2>
                 <p className="text-lg text-muted-foreground mb-8">
-                  From basic maintenance items to specific replacement parts—we
-                  source what you need at competitive prices. All parts are
-                  quote-based for fleets and individual trucks.
+                  From basic maintenance items to specific replacement parts—we can supply what you need at competitive prices. All parts are quote-based for fleets and individual trucks.
                 </p>
 
                 <div className="grid sm:grid-cols-2 gap-4">
-                  {featuredParts.map((part) => (
+                  {partsWeSupply.map((part) => (
                     <div
                       key={part.name}
-                      className="flex items-start gap-3 p-4 bg-muted rounded-lg"
+                      className="flex items-start gap-3 p-4 bg-card rounded-lg"
                     >
                       <div className="bg-accent/10 p-2 rounded-lg">
                         <part.icon className="h-5 w-5 text-accent" />
@@ -141,8 +182,7 @@ const Parts = () => {
                 </div>
 
                 <p className="text-muted-foreground mt-6 text-sm">
-                  Don't see what you need? Request any part—we can source most
-                  truck components.
+                  Don't see what you need? Request any part—we can supply most truck components.
                 </p>
               </div>
 
@@ -418,14 +458,22 @@ const Parts = () => {
                       size="lg"
                       className="w-full bg-accent hover:bg-orange-hover text-accent-foreground"
                     >
-                      Submit Parts Request
+                      Get a Parts Quote
                       <ArrowRight className="ml-2 h-5 w-5" />
                     </Button>
                   </form>
                 </CardContent>
               </Card>
 
-              <div className="mt-8 flex items-start gap-3 text-muted-foreground">
+              {/* Installation Callout */}
+              <div className="mt-6 p-4 bg-accent/10 border border-accent/20 rounded-lg flex items-start gap-3">
+                <Wrench className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
+                <p className="text-foreground font-medium">
+                  Need installation? We can install parts during your service call.
+                </p>
+              </div>
+
+              <div className="mt-4 flex items-start gap-3 text-muted-foreground">
                 <CheckCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
                 <p className="text-sm">
                   We'll review your request and get back to you with pricing and

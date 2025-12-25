@@ -1,13 +1,39 @@
-// Update this page (the content is just a fallback if you fail to update the page)
+import { Helmet } from "react-helmet-async";
+import Layout from "@/components/layout/Layout";
+import Hero from "@/components/home/Hero";
+import ServiceCards from "@/components/home/ServiceCards";
+import FleetContracts from "@/components/home/FleetContracts";
+import Testimonials from "@/components/home/Testimonials";
+import FAQ from "@/components/home/FAQ";
+import CTASection from "@/components/home/CTASection";
 
 const Index = () => {
   return (
-    <div className="flex min-h-screen items-center justify-center bg-background">
-      <div className="text-center">
-        <h1 className="mb-4 text-4xl font-bold">Welcome to Your Blank App</h1>
-        <p className="text-xl text-muted-foreground">Start building your amazing project here!</p>
-      </div>
-    </div>
+    <>
+      <Helmet>
+        <title>
+          Mobile Truck Repair, Maintenance & Detailing | Northern Virginia |
+          FleetForge Truck Solutions
+        </title>
+        <meta
+          name="description"
+          content="Professional mobile truck repair, maintenance, and detailing services in Northern Virginia (Loudoun & Fairfax). Fleet contracts available. Fast response, insured, professional invoicing."
+        />
+        <meta
+          name="keywords"
+          content="mobile truck repair Northern Virginia, fleet maintenance Northern VA, mobile truck detailing, yard truck service, truck parts sourcing"
+        />
+        <link rel="canonical" href="https://fleetforgetrucks.com" />
+      </Helmet>
+      <Layout>
+        <Hero />
+        <ServiceCards />
+        <FleetContracts />
+        <Testimonials />
+        <FAQ />
+        <CTASection />
+      </Layout>
+    </>
   );
 };
 

@@ -24,9 +24,9 @@ const services = [
   },
   {
     icon: Package,
-    title: "Parts & Sourcing",
+    title: "Parts & Supplies",
     description:
-      "We source quality truck parts—filters, lights, brake components, and more. Quote-based ordering for fleets.",
+      "In-stock essentials + fast parts supply for fleets and owner-operators. Request a quote and we'll match the right part.",
     image: truckPartsImage,
     link: "/parts",
   },

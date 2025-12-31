@@ -1,5 +1,6 @@
 import { Helmet } from "react-helmet-async";
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import {
   Package,
   Filter,
@@ -14,7 +15,9 @@ import {
   Link2,
   CircleDot,
   Car,
+  ShoppingCart,
 } from "lucide-react";
+
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -30,6 +33,9 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 import truckPartsImage from "@/assets/truck-parts.jpg";
+
+// ✅ Cart
+import { useCart } from "@/context/CartContext";
 
 const encode = (data: Record<string, string>) => {
   const params = new URLSearchParams();
@@ -57,21 +63,24 @@ const partsWeSupply = [
   { icon: Droplets, name: "Fluids & DEF", description: "Oil, coolant, DEF, additives" },
 ];
 
-// ✅ Online checkout (Stripe Payment Links)
+// ✅ Online items (now used for Add-to-Cart)
 const inStockOnline = [
   {
+    id: "front-bumper-isuzu-npr",
     name: "Front Bumper – Isuzu NPR/NQR/NRR + GMC W-Series",
     price: 660,
     partNumber: "",
     stripeUrl: "https://buy.stripe.com/14AdRabhZ6BG0qWbVebjW00",
   },
   {
+    id: "headlight-right-4121490c94",
     name: "International Headlight Assembly (Right)",
     price: 440,
     partNumber: "4121490C94",
     stripeUrl: "https://buy.stripe.com/eVq00k1Hp3pu2z49N6bjW01",
   },
   {
+    id: "headlight-left-4121489c94",
     name: "International Headlight Assembly (Left)",
     price: 512,
     partNumber: "4121489C94",
@@ -81,6 +90,9 @@ const inStockOnline = [
 
 const Parts = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
+
+  // ✅ Cart hooks
+  const { addItem, count } = useCart();
 
   const [formData, setFormData] = useState({
     businessName: "",
@@ -249,7 +261,7 @@ const Parts = () => {
           </div>
         </section>
 
-        {/* ✅ Buy Online (Stripe) */}
+        {/* ✅ Buy Online (Add to Cart) */}
         <section className="section-padding bg-card">
           <div className="container-custom">
             <div className="text-center mb-10">
@@ -257,14 +269,32 @@ const Parts = () => {
                 Buy In-Stock Parts Online
               </h2>
               <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Secure checkout (card / Apple Pay). We recommend confirming fitment by VIN before
-                purchase—if you’re not sure, use the request form below and we’ll verify it for you.
+                Add items to your cart and checkout securely. We recommend confirming fitment by VIN
+                before purchase—if you’re not sure, use the request form below and we’ll verify it for you.
               </p>
+
+              <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
+                <p className="text-sm text-muted-foreground">
+                  Cart: <span className="font-semibold text-foreground">{count}</span> item(s)
+                </p>
+
+                {/* If you already created /cart, this will work */}
+                <Link to="/cart">
+                  <Button
+                    type="button"
+                    variant="outline"
+                    className="gap-2"
+                  >
+                    <ShoppingCart className="h-4 w-4" />
+                    View Cart
+                  </Button>
+                </Link>
+              </div>
             </div>
 
             <div className="grid gap-4 md:grid-cols-3 max-w-6xl mx-auto">
               {inStockOnline.map((item) => (
-                <Card key={item.name} className="bg-muted/40 border-border">
+                <Card key={item.id} className="bg-muted/40 border-border">
                   <CardContent className="pt-6">
                     <div className="flex items-center justify-between gap-3">
                       <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
@@ -281,22 +311,31 @@ const Parts = () => {
 
                     {item.partNumber ? (
                       <p className="mt-2 text-sm text-muted-foreground">
-                        Part # <span className="font-medium text-foreground">{item.partNumber}</span>
+                        Part #{" "}
+                        <span className="font-medium text-foreground">{item.partNumber}</span>
                       </p>
                     ) : (
-                      <p className="mt-2 text-sm text-muted-foreground">Part # available on request</p>
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Part # available on request
+                      </p>
                     )}
 
                     <div className="mt-5 flex items-center gap-3">
-                      <a
-                        href={item.stripeUrl}
-                        target="_blank"
-                        rel="noreferrer"
-                        className="inline-flex w-full items-center justify-center rounded-md px-4 py-2 text-sm font-semibold bg-accent hover:bg-orange-hover text-accent-foreground transition-colors"
+                      <Button
+                        type="button"
+                        className="w-full bg-accent hover:bg-orange-hover text-accent-foreground"
+                        onClick={() => {
+                          addItem({
+                            id: item.id,
+                            name: item.name,
+                            price: item.price,
+                          });
+                          toast.success("Added to cart.");
+                        }}
                       >
-                        Pay Now
+                        Add to Cart
                         <ArrowRight className="ml-2 h-4 w-4" />
-                      </a>
+                      </Button>
                     </div>
 
                     <p className="mt-3 text-xs text-muted-foreground">
@@ -342,7 +381,11 @@ const Parts = () => {
 
                     {/* Hidden fields for Select values (since Select isn't a real <select>) */}
                     <input type="hidden" name="urgency" value={formData.urgency} />
-                    <input type="hidden" name="deliveryPreference" value={formData.deliveryPreference} />
+                    <input
+                      type="hidden"
+                      name="deliveryPreference"
+                      value={formData.deliveryPreference}
+                    />
                     <input type="hidden" name="photoFileName" value={formData.photoFileName} />
 
                     {/* Contact Info */}
@@ -355,7 +398,9 @@ const Parts = () => {
                             id="businessName"
                             name="businessName"
                             value={formData.businessName}
-                            onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
+                            onChange={(e) =>
+                              setFormData({ ...formData, businessName: e.target.value })
+                            }
                             placeholder="Your company name"
                           />
                         </div>
@@ -367,7 +412,9 @@ const Parts = () => {
                             name="contactName"
                             required
                             value={formData.contactName}
-                            onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
+                            onChange={(e) =>
+                              setFormData({ ...formData, contactName: e.target.value })
+                            }
                             placeholder="Your name"
                           />
                         </div>
@@ -422,7 +469,9 @@ const Parts = () => {
                             name="truckYear"
                             required
                             value={formData.truckYear}
-                            onChange={(e) => setFormData({ ...formData, truckYear: e.target.value })}
+                            onChange={(e) =>
+                              setFormData({ ...formData, truckYear: e.target.value })
+                            }
                             placeholder="e.g., 2019"
                           />
                         </div>
@@ -434,7 +483,9 @@ const Parts = () => {
                             name="truckMake"
                             required
                             value={formData.truckMake}
-                            onChange={(e) => setFormData({ ...formData, truckMake: e.target.value })}
+                            onChange={(e) =>
+                              setFormData({ ...formData, truckMake: e.target.value })
+                            }
                             placeholder="e.g., Freightliner"
                           />
                         </div>
@@ -446,7 +497,9 @@ const Parts = () => {
                             name="truckModel"
                             required
                             value={formData.truckModel}
-                            onChange={(e) => setFormData({ ...formData, truckModel: e.target.value })}
+                            onChange={(e) =>
+                              setFormData({ ...formData, truckModel: e.target.value })
+                            }
                             placeholder="e.g., Cascadia"
                           />
                         </div>
@@ -459,14 +512,18 @@ const Parts = () => {
 
                       <div className="space-y-4">
                         <div>
-                          <Label htmlFor="partNeeded">Part(s) Needed * (describe as much as possible)</Label>
+                          <Label htmlFor="partNeeded">
+                            Part(s) Needed * (describe as much as possible)
+                          </Label>
                           <Textarea
                             id="partNeeded"
                             name="partNeeded"
                             required
                             rows={4}
                             value={formData.partNeeded}
-                            onChange={(e) => setFormData({ ...formData, partNeeded: e.target.value })}
+                            onChange={(e) =>
+                              setFormData({ ...formData, partNeeded: e.target.value })
+                            }
                             placeholder="Describe the part(s) you need, part numbers if known, quantity, etc."
                           />
                         </div>
@@ -476,7 +533,9 @@ const Parts = () => {
                             <Label>Urgency</Label>
                             <Select
                               value={formData.urgency}
-                              onValueChange={(value) => setFormData({ ...formData, urgency: value })}
+                              onValueChange={(value) =>
+                                setFormData({ ...formData, urgency: value })
+                              }
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="How soon do you need it?" />
@@ -512,7 +571,6 @@ const Parts = () => {
                         <div>
                           <Label htmlFor="photo">Photo (optional - helps with identification)</Label>
 
-                          {/* Real file input (we store only the filename in Netlify submission) */}
                           <input
                             id="photo"
                             name="photo"
@@ -554,7 +612,9 @@ const Parts = () => {
                             name="additionalNotes"
                             rows={2}
                             value={formData.additionalNotes}
-                            onChange={(e) => setFormData({ ...formData, additionalNotes: e.target.value })}
+                            onChange={(e) =>
+                              setFormData({ ...formData, additionalNotes: e.target.value })
+                            }
                             placeholder="Any other details that might help"
                           />
                         </div>

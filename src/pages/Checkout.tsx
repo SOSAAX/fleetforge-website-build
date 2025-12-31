@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/context/cart";
+import { useCart } from "@/context/CartContext";
 
 export default function Checkout() {
   const { items } = useCart();
@@ -16,19 +16,18 @@ export default function Checkout() {
           return;
         }
 
-        // Convert to what your Netlify function expects (price + quantity)
-        const payloadItems = items.map((it) => ({
-          name: it.name,
-          price: it.unitPrice,
-          quantity: it.quantity,
-          partNumber: it.partNumber,
-          id: it.id,
-        }));
-
         const res = await fetch("/.netlify/functions/create-checkout-session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items: payloadItems }),
+          body: JSON.stringify({
+            items: items.map((i) => ({
+              id: i.id,
+              name: i.name,
+              unitPrice: i.unitPrice, // ✅ IMPORTANT (matches CartContext)
+              quantity: i.quantity,
+              partNumber: i.partNumber || "",
+            })),
+          }),
         });
 
         const data = await res.json();
@@ -37,9 +36,9 @@ export default function Checkout() {
           throw new Error(data?.error || "Could not start checkout.");
         }
 
-        window.location.href = data.url; // ✅ redirect to Stripe checkout
+        window.location.href = data.url; // ✅ Stripe Checkout URL
       } catch (e: any) {
-        setError(e.message || "Checkout failed.");
+        setError(e?.message || "Checkout failed.");
       }
     };
 
@@ -51,7 +50,7 @@ export default function Checkout() {
       <div className="container-custom section-padding">
         <h1 className="text-3xl font-bold mb-3">Redirecting to secure checkout…</h1>
         <p className="text-muted-foreground mb-6">
-          If you aren’t redirected, use the button below.
+          If you aren’t redirected, go back to cart and try again.
         </p>
 
         {error ? (

@@ -2,7 +2,7 @@
 import { useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { useCart } from "@/context/cart";
+import { useCart } from "@/context/CartContext";
 
 export default function Checkout() {
   const { items } = useCart();

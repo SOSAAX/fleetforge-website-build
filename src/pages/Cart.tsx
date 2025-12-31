@@ -1,95 +1,69 @@
-// src/pages/Cart.tsx
+// src/pages/Checkout.tsx
+import { useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent } from "@/components/ui/card";
 import { useCart } from "@/context/CartContext";
 
-export default function Cart() {
-  const { items, subtotal, setQty, removeItem, itemCount } = useCart();
+export default function Checkout() {
+  const { items } = useCart();
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const run = async () => {
+      try {
+        if (!items.length) {
+          setError("Your cart is empty.");
+          return;
+        }
+
+        const res = await fetch("/.netlify/functions/create-checkout-session", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            items: items.map((i) => ({
+              id: i.id,
+              name: i.name,
+              unitPrice: i.unitPrice, // ✅ IMPORTANT (matches CartContext)
+              quantity: i.quantity,
+              partNumber: i.partNumber || "",
+            })),
+          }),
+        });
+
+        const data = await res.json();
+
+        if (!res.ok || !data?.url) {
+          throw new Error(data?.error || "Could not start checkout.");
+        }
+
+        window.location.href = data.url; // ✅ Stripe Checkout URL
+      } catch (e: any) {
+        setError(e?.message || "Checkout failed.");
+      }
+    };
+
+    run();
+  }, [items]);
 
   return (
     <Layout>
       <div className="container-custom section-padding">
-        <h1 className="text-3xl font-bold mb-6">Your Cart</h1>
+        <h1 className="text-3xl font-bold mb-3">Redirecting to secure checkout…</h1>
+        <p className="text-muted-foreground mb-6">
+          If you aren’t redirected, go back to cart and try again.
+        </p>
 
-        {!items.length ? (
-          <Card className="bg-card border-border">
-            <CardContent className="pt-6">
-              <p className="text-muted-foreground">Your cart is empty.</p>
-              <div className="mt-4">
-                <Button asChild className="bg-accent hover:bg-orange-hover text-accent-foreground">
-                  <a href="/parts">Back to Parts</a>
-                </Button>
-              </div>
-            </CardContent>
-          </Card>
-        ) : (
-          <div className="grid gap-6 lg:grid-cols-3">
-            <div className="lg:col-span-2 space-y-4">
-              {items.map((i) => (
-                <Card key={i.id} className="bg-card border-border">
-                  <CardContent className="pt-6 flex items-center justify-between gap-4">
-                    <div className="min-w-0">
-                      <p className="font-semibold text-foreground">{i.name}</p>
-                      {i.partNumber ? (
-                        <p className="text-sm text-muted-foreground">Part #: {i.partNumber}</p>
-                      ) : null}
-                      <p className="text-sm text-muted-foreground mt-1">
-                        ${i.unitPrice.toFixed(2)} each
-                      </p>
-                    </div>
-
-                    <div className="flex items-center gap-3">
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setQty(i.id, i.quantity - 1)}
-                        disabled={i.quantity <= 1}
-                      >
-                        -
-                      </Button>
-
-                      <span className="w-8 text-center font-medium">{i.quantity}</span>
-
-                      <Button
-                        type="button"
-                        variant="outline"
-                        onClick={() => setQty(i.id, i.quantity + 1)}
-                      >
-                        +
-                      </Button>
-
-                      <Button
-                        type="button"
-                        variant="destructive"
-                        onClick={() => removeItem(i.id)}
-                      >
-                        Remove
-                      </Button>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            <Card className="bg-card border-border h-fit">
-              <CardContent className="pt-6">
-                <p className="text-sm text-muted-foreground">Items</p>
-                <p className="text-xl font-bold mb-4">{itemCount}</p>
-
-                <p className="text-sm text-muted-foreground">Subtotal</p>
-                <p className="text-2xl font-bold mb-6">${subtotal.toFixed(2)}</p>
-
-                <Button asChild className="w-full bg-accent hover:bg-orange-hover text-accent-foreground">
-                  <a href="/checkout">Continue to Checkout</a>
-                </Button>
-
-                <p className="text-xs text-muted-foreground mt-3">
-                  Taxes/shipping/service fees (if any) are calculated at checkout.
-                </p>
-              </CardContent>
-            </Card>
+        {error ? (
+          <div className="p-4 rounded-lg border bg-card">
+            <p className="text-red-500 font-medium mb-3">{error}</p>
+            <Button asChild className="bg-accent hover:bg-orange-hover text-accent-foreground">
+              <a href="/cart">Back to Cart</a>
+            </Button>
           </div>
+        ) : (
+          <Button asChild className="bg-accent hover:bg-orange-hover text-accent-foreground">
+            <a href="/cart">Back to Cart</a>
+          </Button>
         )}
       </div>
     </Layout>

@@ -1,3 +1,4 @@
+// src/App.tsx
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
@@ -11,7 +12,7 @@ import FleetContracts from "./pages/FleetContracts";
 import Parts from "./pages/Parts";
 import About from "./pages/About";
 import Contact from "./pages/Contact";
-import Checkout from "./pages/Checkout";
+import Checkout from "./pages/Checkout"; // ✅ add this
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -30,7 +31,10 @@ const App = () => (
             <Route path="/parts" element={<Parts />} />
             <Route path="/about" element={<About />} />
             <Route path="/contact" element={<Contact />} />
+
+            {/* ✅ Checkout route */}
             <Route path="/checkout" element={<Checkout />} />
+
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>

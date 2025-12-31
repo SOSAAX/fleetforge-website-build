@@ -1,640 +1,126 @@
-import { Helmet } from "react-helmet-async";
-import { useState } from "react";
 import { Link } from "react-router-dom";
-import {
-  Package,
-  Filter,
-  Lightbulb,
-  Wind,
-  Disc,
-  Droplets,
-  ArrowRight,
-  Upload,
-  CheckCircle,
-  Wrench,
-  Link2,
-  CircleDot,
-  Car,
-  ShoppingCart,
-} from "lucide-react";
-
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
-import { Label } from "@/components/ui/label";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import { toast } from "sonner";
-import truckPartsImage from "@/assets/truck-parts.jpg";
-
-// ✅ Cart
 import { useCart } from "@/context/CartContext";
 
-const encode = (data: Record<string, string>) => {
-  const params = new URLSearchParams();
-  Object.entries(data).forEach(([key, value]) => {
-    params.append(key, value);
-  });
-  return params.toString();
+type InStockItem = {
+  id: string;
+  name: string;
+  unitPrice: number; // dollars
+  partNumber?: string;
+  description?: string;
 };
 
-const inStockEssentials = [
-  { icon: Wind, name: "Airlines & Fittings" },
-  { icon: Link2, name: "Glad Hands & Seals" },
-  { icon: Lightbulb, name: "Lights (marker, trailer, headlights)" },
-  { icon: CircleDot, name: "Brake Chambers / Slack Adjusters (common)" },
-  { icon: Car, name: "Mudflaps & Hardware" },
-  { icon: Droplets, name: "Wipers / Fluids / Basics" },
-];
-
-const partsWeSupply = [
-  { icon: Filter, name: "Filters", description: "Oil, air, fuel, DEF filters" },
-  { icon: Lightbulb, name: "Lights", description: "Headlights, marker lights, LEDs" },
-  { icon: Wind, name: "Airlines & Fittings", description: "Hoses, connectors, valves" },
-  { icon: Disc, name: "Brake Components", description: "Pads, shoes, drums, rotors" },
-  { icon: Package, name: "Wipers & Mudflaps", description: "All sizes and styles" },
-  { icon: Droplets, name: "Fluids & DEF", description: "Oil, coolant, DEF, additives" },
-];
-
-// ✅ Online items (Add-to-Cart)
-const inStockOnline = [
+const IN_STOCK: InStockItem[] = [
   {
-    id: "front-bumper-isuzu-npr",
-    name: "Front Bumper – Isuzu NPR/NQR/NRR + GMC W-Series",
-    price: 660,
-    partNumber: "",
-    stripeUrl: "https://buy.stripe.com/14AdRabhZ6BG0qWbVebjW00",
+    id: "front-bumper",
+    name: "Front Bumper",
+    unitPrice: 660,
+    partNumber: "FF-BMP-001",
+    description: "Heavy-duty front bumper (in stock).",
   },
   {
-    id: "headlight-right-4121490c94",
-    name: "International Headlight Assembly (Right)",
-    price: 440,
-    partNumber: "4121490C94",
-    stripeUrl: "https://buy.stripe.com/eVq00k1Hp3pu2z49N6bjW01",
+    id: "headlight-right",
+    name: "Headlight (Right)",
+    unitPrice: 440,
+    partNumber: "FF-HL-R-001",
+    description: "OEM-style headlight assembly (right).",
   },
   {
-    id: "headlight-left-4121489c94",
-    name: "International Headlight Assembly (Left)",
-    price: 512,
-    partNumber: "4121489C94",
-    stripeUrl: "https://buy.stripe.com/cNi14o71J6BGgpU5wQbjW02",
+    id: "headlight-left",
+    name: "Headlight (Left)",
+    unitPrice: 512,
+    partNumber: "FF-HL-L-001",
+    description: "OEM-style headlight assembly (left).",
   },
 ];
 
-const Parts = () => {
-  const [isSubmitting, setIsSubmitting] = useState(false);
+function formatUSD(amount: number) {
+  return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(amount);
+}
 
-  // ✅ Cart hooks (FIXED: itemCount not count)
+export default function Parts() {
   const { addItem, itemCount } = useCart();
 
-  const [formData, setFormData] = useState({
-    businessName: "",
-    contactName: "",
-    phone: "",
-    email: "",
-    vin: "",
-    truckYear: "",
-    truckMake: "",
-    truckModel: "",
-    partNeeded: "",
-    urgency: "",
-    deliveryPreference: "",
-    additionalNotes: "",
-    photoFileName: "",
-  });
-
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isSubmitting) return;
-
-    setIsSubmitting(true);
-
-    try {
-      const payload: Record<string, string> = {
-        "form-name": "parts-request",
-        businessName: formData.businessName,
-        contactName: formData.contactName,
-        phone: formData.phone,
-        email: formData.email,
-        vin: formData.vin,
-        truckYear: formData.truckYear,
-        truckMake: formData.truckMake,
-        truckModel: formData.truckModel,
-        partNeeded: formData.partNeeded,
-        urgency: formData.urgency,
-        deliveryPreference: formData.deliveryPreference,
-        additionalNotes: formData.additionalNotes,
-        photoFileName: formData.photoFileName,
-        "bot-field": "",
-      };
-
-      await fetch("/", {
-        method: "POST",
-        headers: { "Content-Type": "application/x-www-form-urlencoded" },
-        body: encode(payload),
-      });
-
-      toast.success("Parts request submitted! We'll get back to you with a quote shortly.");
-
-      setFormData({
-        businessName: "",
-        contactName: "",
-        phone: "",
-        email: "",
-        vin: "",
-        truckYear: "",
-        truckMake: "",
-        truckModel: "",
-        partNeeded: "",
-        urgency: "",
-        deliveryPreference: "",
-        additionalNotes: "",
-        photoFileName: "",
-      });
-    } catch (err) {
-      toast.error("Submission failed. Please try again or email/call us.");
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
   return (
-    <>
-      <Helmet>
-        <title>Truck Parts & Supplies | FleetForge Truck Solutions</title>
-        <meta
-          name="description"
-          content="In-stock truck parts and supplies for fleets and owner-operators in Northern Virginia. Filters, lights, brake components, and more. Fast supply with VIN-based matching."
-        />
-      </Helmet>
-
-      <Layout>
-        {/* Hero */}
-        <section className="gradient-navy py-20">
-          <div className="container-custom">
-            <div className="max-w-3xl">
-              <h1 className="text-4xl md:text-5xl font-bold text-primary-foreground mb-6">
-                Parts & Supplies
-              </h1>
-              <p className="text-xl text-primary-foreground/80">
-                In-Stock Essentials + Fast Supply (VIN-based matching).
-              </p>
-            </div>
-          </div>
-        </section>
-
-        {/* In-Stock Essentials */}
-        <section className="section-padding bg-card">
-          <div className="container-custom">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold text-foreground mb-4">
-                In-Stock Essentials (Common Items)
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                We keep common maintenance items on hand and can supply most parts quickly. If you
-                don't see it listed, request it and we'll quote fast.
-              </p>
-            </div>
-
-            <div className="grid sm:grid-cols-2 md:grid-cols-3 gap-4 max-w-4xl mx-auto">
-              {inStockEssentials.map((item) => (
-                <div key={item.name} className="flex items-center gap-3 p-4 bg-muted rounded-lg">
-                  <div className="bg-accent/10 p-2 rounded-lg">
-                    <item.icon className="h-5 w-5 text-accent" />
-                  </div>
-                  <span className="font-medium text-foreground">{item.name}</span>
-                </div>
-              ))}
-            </div>
-
-            <p className="text-center text-muted-foreground mt-6 text-sm">
-              In-stock items vary — call/text to confirm availability.
+    <Layout>
+      <div className="mx-auto max-w-6xl px-4 py-10">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
+          <div>
+            <h1 className="text-3xl font-bold">Parts & Supplies</h1>
+            <p className="text-muted-foreground">
+              Buy a few in-stock items online, or request any part with VIN fitment verification.
             </p>
           </div>
-        </section>
 
-        {/* Parts We Supply */}
-        <section className="section-padding bg-muted">
-          <div className="container-custom">
-            <div className="grid lg:grid-cols-2 gap-12 items-center">
-              <div>
-                <h2 className="text-3xl font-bold text-foreground mb-6">Parts We Supply</h2>
-                <p className="text-lg text-muted-foreground mb-8">
-                  From basic maintenance items to specific replacement parts—we can supply what you
-                  need at competitive prices. All parts are quote-based for fleets and individual trucks.
-                </p>
+          <Button asChild variant="outline">
+            <Link to="/cart">
+              View Cart{itemCount > 0 ? ` (${itemCount})` : ""}
+            </Link>
+          </Button>
+        </div>
 
-                <div className="grid sm:grid-cols-2 gap-4">
-                  {partsWeSupply.map((part) => (
-                    <div key={part.name} className="flex items-start gap-3 p-4 bg-card rounded-lg">
-                      <div className="bg-accent/10 p-2 rounded-lg">
-                        <part.icon className="h-5 w-5 text-accent" />
-                      </div>
-                      <div>
-                        <h3 className="font-semibold text-foreground">{part.name}</h3>
-                        <p className="text-sm text-muted-foreground">{part.description}</p>
-                      </div>
-                    </div>
-                  ))}
+        <div className="mt-8 grid gap-6 md:grid-cols-3">
+          {IN_STOCK.map((p) => (
+            <Card key={p.id} className="overflow-hidden">
+              <CardContent className="p-6">
+                <div className="flex items-start justify-between gap-4">
+                  <div>
+                    <h3 className="text-lg font-semibold">{p.name}</h3>
+                    {p.partNumber ? (
+                      <p className="text-sm text-muted-foreground">Part #: {p.partNumber}</p>
+                    ) : null}
+                  </div>
+                  <div className="text-lg font-bold">{formatUSD(p.unitPrice)}</div>
                 </div>
 
-                <p className="text-muted-foreground mt-6 text-sm">
-                  Don't see what you need? Request any part—we can supply most truck components.
-                </p>
-              </div>
+                {p.description ? (
+                  <p className="mt-3 text-sm text-muted-foreground">{p.description}</p>
+                ) : null}
 
-              <div className="rounded-xl overflow-hidden shadow-lg">
-                <img
-                  src={truckPartsImage}
-                  alt="Truck parts and maintenance supplies"
-                  className="w-full h-full object-cover"
-                />
-              </div>
-            </div>
-          </div>
-        </section>
-
-        {/* ✅ Buy Online (Add to Cart) */}
-        <section className="section-padding bg-card">
-          <div className="container-custom">
-            <div className="text-center mb-10">
-              <h2 className="text-3xl font-bold text-foreground mb-4">
-                Buy In-Stock Parts Online
-              </h2>
-              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-                Add items to your cart and checkout securely. We recommend confirming fitment by VIN
-                before purchase—if you’re not sure, use the request form below and we’ll verify it for you.
-              </p>
-
-              <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
-                <p className="text-sm text-muted-foreground">
-                  Cart: <span className="font-semibold text-foreground">{itemCount}</span> item(s)
-                </p>
-
-                <Link to="/cart">
-                  <Button type="button" variant="outline" className="gap-2">
-                    <ShoppingCart className="h-4 w-4" />
-                    View Cart
-                  </Button>
-                </Link>
-              </div>
-            </div>
-
-            <div className="grid gap-4 md:grid-cols-3 max-w-6xl mx-auto">
-              {inStockOnline.map((item) => (
-                <Card key={item.id} className="bg-muted/40 border-border">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center justify-between gap-3">
-                      <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
-                        In Stock
-                      </span>
-                      <div className="text-xl font-bold text-foreground">
-                        ${item.price.toFixed(2)}
-                      </div>
-                    </div>
-
-                    <h3 className="mt-3 text-base font-semibold text-foreground leading-snug">
-                      {item.name}
-                    </h3>
-
-                    {item.partNumber ? (
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        Part #{" "}
-                        <span className="font-medium text-foreground">{item.partNumber}</span>
-                      </p>
-                    ) : (
-                      <p className="mt-2 text-sm text-muted-foreground">
-                        Part # available on request
-                      </p>
-                    )}
-
-                    <div className="mt-5 flex items-center gap-3">
-                      <Button
-                        type="button"
-                        className="w-full bg-accent hover:bg-orange-hover text-accent-foreground"
-                        onClick={() => {
-                          // ✅ FIXED: CartContext expects unitPrice + itemCount
-                          addItem(
-                            {
-                              id: item.id,
-                              name: item.name,
-                              unitPrice: item.price,
-                              partNumber: item.partNumber || undefined,
-                            },
-                            1
-                          );
-
-                          toast.success("Added to cart.");
-                        }}
-                      >
-                        Add to Cart
-                        <ArrowRight className="ml-2 h-4 w-4" />
-                      </Button>
-                    </div>
-
-                    <p className="mt-3 text-xs text-muted-foreground">
-                      Questions before purchase? Submit the form below (include VIN + part needed) and
-                      we’ll confirm compatibility.
-                    </p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-          </div>
-        </section>
-
-        {/* Request Form */}
-        <section className="section-padding bg-muted">
-          <div className="container-custom">
-            <div className="max-w-3xl mx-auto">
-              <div className="text-center mb-12">
-                <h2 className="text-3xl md:text-4xl font-bold text-foreground mb-4">
-                  Request a Part
-                </h2>
-                <p className="text-lg text-muted-foreground">
-                  Tell us what you need and we'll get you a quote. The more details you provide, the faster we can find the right part.
-                </p>
-              </div>
-
-              <Card className="bg-card border-border">
-                <CardContent className="pt-8">
-                  <form
-                    name="parts-request"
-                    method="POST"
-                    data-netlify="true"
-                    netlify-honeypot="bot-field"
-                    onSubmit={handleSubmit}
-                    className="space-y-6"
+                <div className="mt-5 flex gap-3">
+                  <Button
+                    className="w-full"
+                    onClick={() =>
+                      addItem(
+                        {
+                          id: p.id,
+                          name: p.name,
+                          unitPrice: p.unitPrice,
+                          partNumber: p.partNumber,
+                          quantity: 1, // CartContext can ignore this, but it won’t hurt
+                        },
+                        1
+                      )
+                    }
                   >
-                    <input type="hidden" name="form-name" value="parts-request" />
-                    <p hidden>
-                      <label>
-                        Don’t fill this out: <input name="bot-field" />
-                      </label>
-                    </p>
+                    Add to Cart
+                  </Button>
 
-                    <input type="hidden" name="urgency" value={formData.urgency} />
-                    <input type="hidden" name="deliveryPreference" value={formData.deliveryPreference} />
-                    <input type="hidden" name="photoFileName" value={formData.photoFileName} />
+                  <Button asChild variant="outline" className="w-full">
+                    <Link to="/checkout">Checkout</Link>
+                  </Button>
+                </div>
+              </CardContent>
+            </Card>
+          ))}
+        </div>
 
-                    {/* Contact Info */}
-                    <div>
-                      <h3 className="font-bold text-foreground mb-4">Contact Information</h3>
-                      <div className="grid sm:grid-cols-2 gap-4">
-                        <div>
-                          <Label htmlFor="businessName">Business Name</Label>
-                          <Input
-                            id="businessName"
-                            name="businessName"
-                            value={formData.businessName}
-                            onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
-                            placeholder="Your company name"
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="contactName">Contact Name *</Label>
-                          <Input
-                            id="contactName"
-                            name="contactName"
-                            required
-                            value={formData.contactName}
-                            onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
-                            placeholder="Your name"
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="phone">Phone *</Label>
-                          <Input
-                            id="phone"
-                            name="phone"
-                            type="tel"
-                            required
-                            value={formData.phone}
-                            onChange={(e) => setFormData({ ...formData, phone: e.target.value })}
-                            placeholder="(555) 555-5555"
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="email">Email *</Label>
-                          <Input
-                            id="email"
-                            name="email"
-                            type="email"
-                            required
-                            value={formData.email}
-                            onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-                            placeholder="you@company.com"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Truck Info */}
-                    <div>
-                      <h3 className="font-bold text-foreground mb-4">Truck Information</h3>
-                      <div className="grid sm:grid-cols-2 gap-4">
-                        <div className="sm:col-span-2">
-                          <Label htmlFor="vin">VIN (if available)</Label>
-                          <Input
-                            id="vin"
-                            name="vin"
-                            value={formData.vin}
-                            onChange={(e) => setFormData({ ...formData, vin: e.target.value })}
-                            placeholder="Vehicle Identification Number"
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="truckYear">Year *</Label>
-                          <Input
-                            id="truckYear"
-                            name="truckYear"
-                            required
-                            value={formData.truckYear}
-                            onChange={(e) => setFormData({ ...formData, truckYear: e.target.value })}
-                            placeholder="e.g., 2019"
-                          />
-                        </div>
-
-                        <div>
-                          <Label htmlFor="truckMake">Make *</Label>
-                          <Input
-                            id="truckMake"
-                            name="truckMake"
-                            required
-                            value={formData.truckMake}
-                            onChange={(e) => setFormData({ ...formData, truckMake: e.target.value })}
-                            placeholder="e.g., Freightliner"
-                          />
-                        </div>
-
-                        <div className="sm:col-span-2">
-                          <Label htmlFor="truckModel">Model *</Label>
-                          <Input
-                            id="truckModel"
-                            name="truckModel"
-                            required
-                            value={formData.truckModel}
-                            onChange={(e) => setFormData({ ...formData, truckModel: e.target.value })}
-                            placeholder="e.g., Cascadia"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    {/* Part Info */}
-                    <div>
-                      <h3 className="font-bold text-foreground mb-4">Part Request</h3>
-
-                      <div className="space-y-4">
-                        <div>
-                          <Label htmlFor="partNeeded">
-                            Part(s) Needed * (describe as much as possible)
-                          </Label>
-                          <Textarea
-                            id="partNeeded"
-                            name="partNeeded"
-                            required
-                            rows={4}
-                            value={formData.partNeeded}
-                            onChange={(e) => setFormData({ ...formData, partNeeded: e.target.value })}
-                            placeholder="Describe the part(s) you need, part numbers if known, quantity, etc."
-                          />
-                        </div>
-
-                        <div className="grid sm:grid-cols-2 gap-4">
-                          <div>
-                            <Label>Urgency</Label>
-                            <Select
-                              value={formData.urgency}
-                              onValueChange={(value) => setFormData({ ...formData, urgency: value })}
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="How soon do you need it?" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="urgent">Urgent (ASAP)</SelectItem>
-                                <SelectItem value="soon">Soon (within a week)</SelectItem>
-                                <SelectItem value="standard">Standard (no rush)</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-
-                          <div>
-                            <Label>Delivery Preference</Label>
-                            <Select
-                              value={formData.deliveryPreference}
-                              onValueChange={(value) =>
-                                setFormData({ ...formData, deliveryPreference: value })
-                              }
-                            >
-                              <SelectTrigger>
-                                <SelectValue placeholder="How do you want it?" />
-                              </SelectTrigger>
-                              <SelectContent>
-                                <SelectItem value="deliver">Deliver to my location</SelectItem>
-                                <SelectItem value="pickup">I'll pick up</SelectItem>
-                                <SelectItem value="install">Deliver + Install</SelectItem>
-                              </SelectContent>
-                            </Select>
-                          </div>
-                        </div>
-
-                        <div>
-                          <Label htmlFor="photo">Photo (optional - helps with identification)</Label>
-
-                          <input
-                            id="photo"
-                            name="photo"
-                            type="file"
-                            className="hidden"
-                            onChange={(e) => {
-                              const file = e.target.files?.[0];
-                              setFormData((prev) => ({
-                                ...prev,
-                                photoFileName: file ? file.name : "",
-                              }));
-                            }}
-                          />
-
-                          <label
-                            htmlFor="photo"
-                            className="mt-2 border-2 border-dashed border-border rounded-lg p-6 text-center hover:border-accent transition-colors cursor-pointer block"
-                          >
-                            <Upload className="h-8 w-8 text-muted-foreground mx-auto mb-2" />
-                            <p className="text-sm text-muted-foreground">
-                              Click to choose a photo (optional)
-                            </p>
-                            {formData.photoFileName ? (
-                              <p className="text-sm text-foreground mt-2">
-                                Selected: {formData.photoFileName}
-                              </p>
-                            ) : null}
-                          </label>
-
-                          <p className="text-xs text-muted-foreground mt-2">
-                            Note: This form saves the photo filename. If you need to send the actual photo, we can request it by email/text.
-                          </p>
-                        </div>
-
-                        <div>
-                          <Label htmlFor="additionalNotes">Additional Notes</Label>
-                          <Textarea
-                            id="additionalNotes"
-                            name="additionalNotes"
-                            rows={2}
-                            value={formData.additionalNotes}
-                            onChange={(e) =>
-                              setFormData({ ...formData, additionalNotes: e.target.value })
-                            }
-                            placeholder="Any other details that might help"
-                          />
-                        </div>
-                      </div>
-                    </div>
-
-                    <Button
-                      type="submit"
-                      size="lg"
-                      disabled={isSubmitting}
-                      className="w-full bg-accent hover:bg-orange-hover text-accent-foreground"
-                    >
-                      {isSubmitting ? "Submitting..." : "Get a Parts Quote"}
-                      <ArrowRight className="ml-2 h-5 w-5" />
-                    </Button>
-                  </form>
-                </CardContent>
-              </Card>
-
-              <div className="mt-6 p-4 bg-accent/10 border border-accent/20 rounded-lg flex items-start gap-3">
-                <Wrench className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
-                <p className="text-foreground font-medium">
-                  Need installation? We can install parts during your service call.
-                </p>
-              </div>
-
-              <div className="mt-4 flex items-start gap-3 text-muted-foreground">
-                <CheckCircle className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
-                <p className="text-sm">
-                  We'll review your request and get back to you with pricing and availability—usually within a few hours during business hours.
-                </p>
-              </div>
+        <Card className="mt-10">
+          <CardContent className="p-6">
+            <h2 className="text-lg font-semibold">Need a specific part?</h2>
+            <p className="mt-1 text-sm text-muted-foreground">
+              Submit a request with your VIN and we’ll verify fitment + quote quickly.
+            </p>
+            <div className="mt-4">
+              <Button asChild variant="secondary">
+                <Link to="/contact">Request a Part (VIN-based)</Link>
+              </Button>
             </div>
-          </div>
-        </section>
-      </Layout>
-    </>
+          </CardContent>
+        </Card>
+      </div>
+    </Layout>
   );
-};
-
-export default Parts;
+}

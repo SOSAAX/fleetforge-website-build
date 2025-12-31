@@ -63,7 +63,7 @@ const partsWeSupply = [
   { icon: Droplets, name: "Fluids & DEF", description: "Oil, coolant, DEF, additives" },
 ];
 
-// ✅ Online items (now used for Add-to-Cart)
+// ✅ Online items (Add-to-Cart)
 const inStockOnline = [
   {
     id: "front-bumper-isuzu-npr",
@@ -91,8 +91,8 @@ const inStockOnline = [
 const Parts = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
-  // ✅ Cart hooks
-  const { addItem, count } = useCart();
+  // ✅ Cart hooks (FIXED: itemCount not count)
+  const { addItem, itemCount } = useCart();
 
   const [formData, setFormData] = useState({
     businessName: "",
@@ -275,16 +275,11 @@ const Parts = () => {
 
               <div className="mt-4 flex flex-col sm:flex-row items-center justify-center gap-3">
                 <p className="text-sm text-muted-foreground">
-                  Cart: <span className="font-semibold text-foreground">{count}</span> item(s)
+                  Cart: <span className="font-semibold text-foreground">{itemCount}</span> item(s)
                 </p>
 
-                {/* If you already created /cart, this will work */}
                 <Link to="/cart">
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="gap-2"
-                  >
+                  <Button type="button" variant="outline" className="gap-2">
                     <ShoppingCart className="h-4 w-4" />
                     View Cart
                   </Button>
@@ -325,11 +320,17 @@ const Parts = () => {
                         type="button"
                         className="w-full bg-accent hover:bg-orange-hover text-accent-foreground"
                         onClick={() => {
-                          addItem({
-                            id: item.id,
-                            name: item.name,
-                            price: item.price,
-                          });
+                          // ✅ FIXED: CartContext expects unitPrice + itemCount
+                          addItem(
+                            {
+                              id: item.id,
+                              name: item.name,
+                              unitPrice: item.price,
+                              partNumber: item.partNumber || undefined,
+                            },
+                            1
+                          );
+
                           toast.success("Added to cart.");
                         }}
                       >
@@ -379,13 +380,8 @@ const Parts = () => {
                       </label>
                     </p>
 
-                    {/* Hidden fields for Select values (since Select isn't a real <select>) */}
                     <input type="hidden" name="urgency" value={formData.urgency} />
-                    <input
-                      type="hidden"
-                      name="deliveryPreference"
-                      value={formData.deliveryPreference}
-                    />
+                    <input type="hidden" name="deliveryPreference" value={formData.deliveryPreference} />
                     <input type="hidden" name="photoFileName" value={formData.photoFileName} />
 
                     {/* Contact Info */}
@@ -398,9 +394,7 @@ const Parts = () => {
                             id="businessName"
                             name="businessName"
                             value={formData.businessName}
-                            onChange={(e) =>
-                              setFormData({ ...formData, businessName: e.target.value })
-                            }
+                            onChange={(e) => setFormData({ ...formData, businessName: e.target.value })}
                             placeholder="Your company name"
                           />
                         </div>
@@ -412,9 +406,7 @@ const Parts = () => {
                             name="contactName"
                             required
                             value={formData.contactName}
-                            onChange={(e) =>
-                              setFormData({ ...formData, contactName: e.target.value })
-                            }
+                            onChange={(e) => setFormData({ ...formData, contactName: e.target.value })}
                             placeholder="Your name"
                           />
                         </div>
@@ -469,9 +461,7 @@ const Parts = () => {
                             name="truckYear"
                             required
                             value={formData.truckYear}
-                            onChange={(e) =>
-                              setFormData({ ...formData, truckYear: e.target.value })
-                            }
+                            onChange={(e) => setFormData({ ...formData, truckYear: e.target.value })}
                             placeholder="e.g., 2019"
                           />
                         </div>
@@ -483,9 +473,7 @@ const Parts = () => {
                             name="truckMake"
                             required
                             value={formData.truckMake}
-                            onChange={(e) =>
-                              setFormData({ ...formData, truckMake: e.target.value })
-                            }
+                            onChange={(e) => setFormData({ ...formData, truckMake: e.target.value })}
                             placeholder="e.g., Freightliner"
                           />
                         </div>
@@ -497,9 +485,7 @@ const Parts = () => {
                             name="truckModel"
                             required
                             value={formData.truckModel}
-                            onChange={(e) =>
-                              setFormData({ ...formData, truckModel: e.target.value })
-                            }
+                            onChange={(e) => setFormData({ ...formData, truckModel: e.target.value })}
                             placeholder="e.g., Cascadia"
                           />
                         </div>
@@ -521,9 +507,7 @@ const Parts = () => {
                             required
                             rows={4}
                             value={formData.partNeeded}
-                            onChange={(e) =>
-                              setFormData({ ...formData, partNeeded: e.target.value })
-                            }
+                            onChange={(e) => setFormData({ ...formData, partNeeded: e.target.value })}
                             placeholder="Describe the part(s) you need, part numbers if known, quantity, etc."
                           />
                         </div>
@@ -533,9 +517,7 @@ const Parts = () => {
                             <Label>Urgency</Label>
                             <Select
                               value={formData.urgency}
-                              onValueChange={(value) =>
-                                setFormData({ ...formData, urgency: value })
-                              }
+                              onValueChange={(value) => setFormData({ ...formData, urgency: value })}
                             >
                               <SelectTrigger>
                                 <SelectValue placeholder="How soon do you need it?" />
@@ -634,7 +616,6 @@ const Parts = () => {
                 </CardContent>
               </Card>
 
-              {/* Installation Callout */}
               <div className="mt-6 p-4 bg-accent/10 border border-accent/20 rounded-lg flex items-start gap-3">
                 <Wrench className="h-5 w-5 text-accent flex-shrink-0 mt-0.5" />
                 <p className="text-foreground font-medium">

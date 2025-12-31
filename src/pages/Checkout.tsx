@@ -2,34 +2,33 @@
 import { useEffect, useState } from "react";
 import Layout from "@/components/layout/Layout";
 import { Button } from "@/components/ui/button";
-
-type CartItem = {
-  name: string;
-  price: number;
-  quantity: number;
-  partNumber?: string;
-};
-
-const CART_KEY = "fleetforge_cart"; // <-- IMPORTANT: must match whatever your Parts page uses
+import { useCart } from "@/context/cart";
 
 export default function Checkout() {
+  const { items } = useCart();
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     const run = async () => {
       try {
-        const raw = localStorage.getItem(CART_KEY);
-        const items: CartItem[] = raw ? JSON.parse(raw) : [];
-
         if (!items.length) {
           setError("Your cart is empty.");
           return;
         }
 
+        // Convert to what your Netlify function expects (price + quantity)
+        const payloadItems = items.map((it) => ({
+          name: it.name,
+          price: it.unitPrice,
+          quantity: it.quantity,
+          partNumber: it.partNumber,
+          id: it.id,
+        }));
+
         const res = await fetch("/.netlify/functions/create-checkout-session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ items }),
+          body: JSON.stringify({ items: payloadItems }),
         });
 
         const data = await res.json();
@@ -38,14 +37,14 @@ export default function Checkout() {
           throw new Error(data?.error || "Could not start checkout.");
         }
 
-        window.location.href = data.url; // ✅ go to Stripe Checkout
+        window.location.href = data.url; // ✅ redirect to Stripe checkout
       } catch (e: any) {
         setError(e.message || "Checkout failed.");
       }
     };
 
     run();
-  }, []);
+  }, [items]);
 
   return (
     <Layout>

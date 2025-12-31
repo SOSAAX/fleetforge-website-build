@@ -57,6 +57,28 @@ const partsWeSupply = [
   { icon: Droplets, name: "Fluids & DEF", description: "Oil, coolant, DEF, additives" },
 ];
 
+// ✅ Online checkout (Stripe Payment Links)
+const inStockOnline = [
+  {
+    name: "Front Bumper – Isuzu NPR/NQR/NRR + GMC W-Series",
+    price: 660,
+    partNumber: "",
+    stripeUrl: "https://buy.stripe.com/14AdRabhZ6BG0qWbVebjW00",
+  },
+  {
+    name: "International Headlight Assembly (Right)",
+    price: 440,
+    partNumber: "4121490C94",
+    stripeUrl: "https://buy.stripe.com/eVq00k1Hp3pu2z49N6bjW01",
+  },
+  {
+    name: "International Headlight Assembly (Left)",
+    price: 512,
+    partNumber: "4121489C94",
+    stripeUrl: "https://buy.stripe.com/cNi14o71J6BGgpU5wQbjW02",
+  },
+];
+
 const Parts = () => {
   const [isSubmitting, setIsSubmitting] = useState(false);
 
@@ -223,6 +245,67 @@ const Parts = () => {
                   className="w-full h-full object-cover"
                 />
               </div>
+            </div>
+          </div>
+        </section>
+
+        {/* ✅ Buy Online (Stripe) */}
+        <section className="section-padding bg-card">
+          <div className="container-custom">
+            <div className="text-center mb-10">
+              <h2 className="text-3xl font-bold text-foreground mb-4">
+                Buy In-Stock Parts Online
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                Secure checkout (card / Apple Pay). We recommend confirming fitment by VIN before
+                purchase—if you’re not sure, use the request form below and we’ll verify it for you.
+              </p>
+            </div>
+
+            <div className="grid gap-4 md:grid-cols-3 max-w-6xl mx-auto">
+              {inStockOnline.map((item) => (
+                <Card key={item.name} className="bg-muted/40 border-border">
+                  <CardContent className="pt-6">
+                    <div className="flex items-center justify-between gap-3">
+                      <span className="inline-flex items-center rounded-full bg-accent/10 px-3 py-1 text-xs font-semibold text-accent">
+                        In Stock
+                      </span>
+                      <div className="text-xl font-bold text-foreground">
+                        ${item.price.toFixed(2)}
+                      </div>
+                    </div>
+
+                    <h3 className="mt-3 text-base font-semibold text-foreground leading-snug">
+                      {item.name}
+                    </h3>
+
+                    {item.partNumber ? (
+                      <p className="mt-2 text-sm text-muted-foreground">
+                        Part # <span className="font-medium text-foreground">{item.partNumber}</span>
+                      </p>
+                    ) : (
+                      <p className="mt-2 text-sm text-muted-foreground">Part # available on request</p>
+                    )}
+
+                    <div className="mt-5 flex items-center gap-3">
+                      <a
+                        href={item.stripeUrl}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="inline-flex w-full items-center justify-center rounded-md px-4 py-2 text-sm font-semibold bg-accent hover:bg-orange-hover text-accent-foreground transition-colors"
+                      >
+                        Pay Now
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </a>
+                    </div>
+
+                    <p className="mt-3 text-xs text-muted-foreground">
+                      Questions before purchase? Submit the form below (include VIN + part needed) and
+                      we’ll confirm compatibility.
+                    </p>
+                  </CardContent>
+                </Card>
+              ))}
             </div>
           </div>
         </section>

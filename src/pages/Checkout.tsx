@@ -16,18 +16,20 @@ export default function Checkout() {
           return;
         }
 
+        // Map CartContext items -> server expects {name, price, quantity, partNumber}
+        const payload = {
+          items: items.map((i) => ({
+            name: i.name,
+            price: i.unitPrice,
+            quantity: i.quantity,
+            partNumber: i.partNumber,
+          })),
+        };
+
         const res = await fetch("/.netlify/functions/create-checkout-session", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            items: items.map((i) => ({
-              id: i.id,
-              name: i.name,
-              unitPrice: i.unitPrice, // ✅ IMPORTANT (matches CartContext)
-              quantity: i.quantity,
-              partNumber: i.partNumber || "",
-            })),
-          }),
+          body: JSON.stringify(payload),
         });
 
         const data = await res.json();
@@ -36,9 +38,9 @@ export default function Checkout() {
           throw new Error(data?.error || "Could not start checkout.");
         }
 
-        window.location.href = data.url; // ✅ Stripe Checkout URL
+        window.location.href = data.url;
       } catch (e: any) {
-        setError(e?.message || "Checkout failed.");
+        setError(e.message || "Checkout failed.");
       }
     };
 
@@ -50,7 +52,7 @@ export default function Checkout() {
       <div className="container-custom section-padding">
         <h1 className="text-3xl font-bold mb-3">Redirecting to secure checkout…</h1>
         <p className="text-muted-foreground mb-6">
-          If you aren’t redirected, go back to cart and try again.
+          If you aren’t redirected, use the button below.
         </p>
 
         {error ? (

@@ -1,7 +1,7 @@
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { CartProvider } from "@/context/CartContext";
 
-import Home from "@/pages/Home";
+import Home from "@/pages/Index"; // <-- change to "@/pages/index" if your file is lowercase
 import Parts from "@/pages/Parts";
 import Cart from "@/pages/Cart";
 import Checkout from "@/pages/Checkout";
